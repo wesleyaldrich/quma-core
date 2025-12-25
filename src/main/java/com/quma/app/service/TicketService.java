@@ -2,23 +2,109 @@ package com.quma.app.service;
 
 import com.google.zxing.WriterException;
 import com.quma.app.common.constant.ErrorCode;
-import com.quma.app.common.response.TicketResponse;
+import com.quma.app.common.constant.TrxType;
+import com.quma.app.common.exception.BadParameterException;
+import com.quma.app.common.response.ErrorResponse;
+import com.quma.app.common.response.TicketDetailResponse;
+import com.quma.app.entity.Ticket;
+import com.quma.app.repository.TicketRepository;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.UUID;
 
+@Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TicketService {
 
     private final QrCodeService qrCodeService;
+    private final CryptoService cryptoService;
+    private final TicketRepository ticketRepository;
 
-    public TicketResponse getTicketDummy(int width, int height) throws WriterException, IOException {
-        var dummyTicket = qrCodeService.generate("This is a dummy text", width, height);
+    @Value("${ticket.storage-path}")
+    private String storagePath;
 
-        return TicketResponse.builder()
-                .ticketUrl(dummyTicket)
+    public TicketDetailResponse getTicketDummy(int width, int height) throws WriterException, IOException {
+        String dummyTicketUrl = "/tickets/images/dummy-ticket.png";
+
+        Ticket dummyTicket = Ticket.builder()
+                .customerNo("0123456789")
+                .trxType(TrxType.TRANSFER_SAME_BANK)
+                .bookingDate(LocalDateTime.parse("2025-12-25T10:30:00"))
+                .url(dummyTicketUrl)
+                .build();
+
+        return TicketDetailResponse.builder()
+                .errorCode(ErrorCode.SUCCESS.getCode())
+                .ticket(dummyTicket)
                 .build();
     }
+
+    public ErrorResponse generateTicket(String customerNo, String trxTypeString, String bookingDateString, int width, int height) throws IOException, WriterException {
+        TrxType trxType;
+        try {
+            trxType = TrxType.valueOf(trxTypeString);
+        } catch (IllegalArgumentException e) {
+            throw new BadParameterException("The value of trxType is unrecognized.");
+        }
+
+        LocalDateTime bookingDate;
+        try {
+            bookingDate = LocalDateTime.parse(bookingDateString);
+        } catch (DateTimeParseException e) {
+            throw new BadParameterException("Booking date can't be parsed correctly based on ISO-8601.");
+        }
+
+        String fileName = UUID.randomUUID() + ".png";
+        String ticketUrl = "/tickets/images/" + fileName;
+
+        Ticket ticket = Ticket.builder()
+                .customerNo(customerNo)
+                .trxType(trxType)
+                .bookingDate(bookingDate)
+                .url(ticketUrl)
+                .build();
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        String ticketJson = mapper.writeValueAsString(ticket);
+
+        log.debug("ticketJson: {}", ticketJson);
+
+        String ticketJsonEncrypted = cryptoService.encrypt(ticketJson);
+
+        log.debug("ticketJsonEncrypted: {}", ticketJsonEncrypted);
+
+        // generate qr
+        BufferedImage image = qrCodeService.generate(ticketJsonEncrypted, width, height);
+
+        save(image, fileName);
+
+        ticketRepository.save(ticket);
+
+        return ErrorResponse.builder().errorMessage("Successfully created new ticket!").build();
+    }
+
+    public void save(BufferedImage image, String fileName) throws IOException {
+        Path directory = Paths.get(storagePath);
+        Files.createDirectories(directory);
+
+        Path filePath = directory.resolve(fileName);
+        ImageIO.write(image, "png", filePath.toFile());
+    }
+
+
 }

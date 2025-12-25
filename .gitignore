@@ -34,3 +34,4 @@ build/
 
 ### QUMA-CORE ###
 storage/
+!storage/tickets/dummy-ticket.png

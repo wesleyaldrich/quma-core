@@ -21,7 +21,7 @@ public class QrCodeService {
     @Value("${ticket.storage-path}")
     private String storagePath;
 
-    public String generate(String text, int width, int height) throws WriterException, IOException {
+    public BufferedImage generate(String text, int width, int height) throws WriterException, IOException {
         QRCodeWriter writer = new QRCodeWriter();
         BitMatrix matrix = writer.encode(
                 text,
@@ -46,18 +46,6 @@ public class QrCodeService {
             }
         }
 
-        return save(image);
-    }
-
-    public String save(BufferedImage image) throws IOException {
-        String fileName = UUID.randomUUID() + ".png";
-
-        Path directory = Paths.get(storagePath);
-        Files.createDirectories(directory);
-
-        Path filePath = directory.resolve(fileName);
-        ImageIO.write(image, "png", filePath.toFile());
-
-        return "/tickets/images/" + fileName;
+        return image;
     }
 }

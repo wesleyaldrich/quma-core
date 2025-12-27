@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Document(collection = "tickets")
@@ -22,15 +23,16 @@ public class Ticket {
     private String customerNo;
     private TrxType trxType;
     private LocalDateTime bookingDate;
+    private String branchName;
     private String url;
 
     /* False when cancelled */
     @Builder.Default
     private boolean valid = true;
 
-/*    *//* Timestamps *//*
+    /* Timestamps */
     @CreatedDate
     private Instant createdAt;
     @LastModifiedDate
-    private Instant updatedAt;*/
+    private Instant updatedAt;
 }

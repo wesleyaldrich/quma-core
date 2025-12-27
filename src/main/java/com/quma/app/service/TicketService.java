@@ -4,8 +4,10 @@ import com.google.zxing.WriterException;
 import com.quma.app.common.constant.ErrorCode;
 import com.quma.app.common.constant.TrxType;
 import com.quma.app.common.exception.BadParameterException;
+import com.quma.app.common.request.GenerateTicketRequest;
 import com.quma.app.common.response.ErrorResponse;
 import com.quma.app.common.response.TicketDetailResponse;
+import com.quma.app.common.response.TicketListResponse;
 import com.quma.app.entity.Ticket;
 import com.quma.app.repository.TicketRepository;
 import lombok.AllArgsConstructor;
@@ -37,23 +39,12 @@ public class TicketService {
     @Value("${ticket.storage-path}")
     private String storagePath;
 
-    public TicketDetailResponse getTicketDummy(int width, int height) throws WriterException, IOException {
-        String dummyTicketUrl = "/tickets/images/dummy-ticket.png";
+    public ErrorResponse generateTicket(GenerateTicketRequest request, int width, int height) throws IOException, WriterException {
+        String customerNo = request.getCustomerNo();
+        String trxTypeString = request.getTrxTypeString();
+        String bookingDateString = request.getBookingDateString();
+        String branchName = request.getBranchName();
 
-        Ticket dummyTicket = Ticket.builder()
-                .customerNo("0123456789")
-                .trxType(TrxType.TRANSFER_SAME_BANK)
-                .bookingDate(LocalDateTime.parse("2025-12-25T10:30:00"))
-                .url(dummyTicketUrl)
-                .build();
-
-        return TicketDetailResponse.builder()
-                .errorCode(ErrorCode.SUCCESS.getCode())
-                .ticket(dummyTicket)
-                .build();
-    }
-
-    public ErrorResponse generateTicket(String customerNo, String trxTypeString, String bookingDateString, int width, int height) throws IOException, WriterException {
         TrxType trxType;
         try {
             trxType = TrxType.valueOf(trxTypeString);
@@ -75,6 +66,7 @@ public class TicketService {
                 .customerNo(customerNo)
                 .trxType(trxType)
                 .bookingDate(bookingDate)
+                .branchName(branchName)
                 .url(ticketUrl)
                 .build();
 
@@ -97,11 +89,34 @@ public class TicketService {
         return ErrorResponse.builder().errorMessage("Successfully created new ticket!").build();
     }
 
-    public void save(BufferedImage image, String fileName) throws IOException {
+    private void save(BufferedImage image, String fileName) throws IOException {
         Path directory = Paths.get(storagePath);
         Files.createDirectories(directory);
 
         Path filePath = directory.resolve(fileName);
         ImageIO.write(image, "png", filePath.toFile());
     }
+
+    public TicketListResponse getTicketList(String customerNo) {
+        var activeReservations = ticketRepository.findGroupedByBookingDate(customerNo);
+
+        return TicketListResponse.builder()
+                .activeReservations(activeReservations)
+                .build();
+    }
+
+    public ErrorResponse cancelTicket(String ticketId) {
+        var targetedTicketOptional = ticketRepository.findById(ticketId);
+
+        if (targetedTicketOptional.isEmpty()) {
+            throw new BadParameterException("Ticket with the provided id not found!");
+        }
+
+        var targetedTicket = targetedTicketOptional.get();
+        targetedTicket.setValid(false);
+        ticketRepository.save(targetedTicket);
+
+        return ErrorResponse.builder().errorMessage("Successfully cancelled ticket!").build();
+    }
+
 }

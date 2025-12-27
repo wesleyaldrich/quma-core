@@ -68,9 +68,9 @@ public class TicketService {
             throw new BadParameterException("Booking date can't be parsed correctly based on ISO-8601.");
         }
 
+        /* Create new ticket */
         String fileName = UUID.randomUUID() + ".png";
         String ticketUrl = "/tickets/images/" + fileName;
-
         Ticket ticket = Ticket.builder()
                 .customerNo(customerNo)
                 .trxType(trxType)
@@ -79,20 +79,19 @@ public class TicketService {
                 .build();
 
         ObjectMapper mapper = new ObjectMapper();
-
         String ticketJson = mapper.writeValueAsString(ticket);
-
-        log.debug("ticketJson: {}", ticketJson);
+        log.info("ticketJson: {}", ticketJson);
 
         String ticketJsonEncrypted = cryptoService.encrypt(ticketJson);
+        log.info("ticketJsonEncrypted: {}", ticketJsonEncrypted);
 
-        log.debug("ticketJsonEncrypted: {}", ticketJsonEncrypted);
+        /* This part can be safely deleted, since it's purely for confirmation purposes */
+        String ticketJsonDecrypted = cryptoService.decrypt(ticketJsonEncrypted);
+        log.info("ticketJsonDecrypted: {}", ticketJsonDecrypted);
 
-        // generate qr
+        /* Generate QR then save ticket */
         BufferedImage image = qrCodeService.generate(ticketJsonEncrypted, width, height);
-
         save(image, fileName);
-
         ticketRepository.save(ticket);
 
         return ErrorResponse.builder().errorMessage("Successfully created new ticket!").build();
@@ -105,6 +104,4 @@ public class TicketService {
         Path filePath = directory.resolve(fileName);
         ImageIO.write(image, "png", filePath.toFile());
     }
-
-
 }

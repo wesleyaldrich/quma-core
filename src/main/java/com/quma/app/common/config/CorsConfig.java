@@ -13,7 +13,6 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedOrigins("*") // Specify allowed origins
                 .allowedMethods("*") // Specify allowed methods
                 .allowedHeaders("*") // Specify allowed headers
-                .allowCredentials(true) // Allow sending cookies, authorization headers, etc.
                 .maxAge(3600); // Cache the CORS preflight response for 1 hour
     }
 }

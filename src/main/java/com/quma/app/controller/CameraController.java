@@ -16,8 +16,10 @@ public class CameraController {
     private final CameraService cameraService;
 
     @PostMapping
-    public ResponseEntity<ErrorResponse> activateCamera(@RequestParam String mode) {
-        return ResponseEntity.ok(cameraService.activateCamera(mode));
+    public ResponseEntity<ErrorResponse> activateCamera(HttpServletRequest request, @RequestParam String mode) {
+        String sessionId = request.getHeader("x-session-id");
+
+        return ResponseEntity.ok(cameraService.activateCamera(mode, sessionId));
     }
 
     @GetMapping

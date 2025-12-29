@@ -1,6 +1,6 @@
 package com.quma.app.entity;
 
-import com.quma.app.common.constant.TrxType;
+import com.quma.app.common.constant.SessionStatus;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
@@ -9,24 +9,30 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
-@Document(collection = "fr_results")
+@Document(collection = "sessions")
 @Data
 @Builder
-public class FrResult {
-
+public class Session {
     @Id
     private String id;
-    private String customerNo;
-    private TrxType trxType;
-    private LocalDateTime bookingDate;
-    private String branchName;
-    private String url;
 
-    /* False when cancelled */
+    private String sessionEpoch;
+
     @Builder.Default
-    private boolean valid = true;
+    private SessionStatus status = SessionStatus.INITIATED;
+
+    /* Should only be filled when SessionStatus.IDENTIFIED */
+    private String ticketId;
+
+    /* Should only be filled when SessionStatus.VERIFIED */
+    private String customerNo;
+
+    /* To handle poll logic */
+    @Builder.Default
+    private boolean responded = false;
+    private boolean validQr;
+    private boolean validFr;
 
     /* Timestamps */
     @CreatedDate

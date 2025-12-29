@@ -1,7 +1,6 @@
 package com.quma.app.common.response;
 
-import com.quma.app.common.dto.FrResponseDto;
-import com.quma.app.common.dto.QrResponseDto;
+import com.quma.app.entity.Session;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,6 +10,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 public class PollCameraResponse extends QumaResponse {
-    @Builder.Default
-    private boolean valid = false;
+    private boolean responded;
+    private boolean validQr;
+    private boolean validFr;
 }

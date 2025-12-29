@@ -1,9 +1,9 @@
 package com.quma.app.controller;
 
 import com.google.zxing.WriterException;
+import com.quma.app.common.dto.GenerateTicketDto;
 import com.quma.app.common.request.GenerateTicketRequest;
 import com.quma.app.common.response.ErrorResponse;
-import com.quma.app.common.response.TicketDetailResponse;
 import com.quma.app.common.response.TicketListResponse;
 import com.quma.app.service.TicketService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,23 +37,26 @@ public class TicketController {
     @PostMapping
     public ResponseEntity<ErrorResponse> generateTicket(
             HttpServletRequest request,
+            @RequestBody GenerateTicketRequest requestBody,
             @RequestParam int width,
             @RequestParam int height
     ) throws IOException, WriterException {
 
         String customerNo = request.getHeader("x-customer-no");
-        String trxTypeString = request.getHeader("x-trx-type");
-        String bookingDateString = request.getHeader("x-booking-date");
-        String branchName = request.getHeader("x-branch-name");
+        String bookingDateString = requestBody.getBookingDate();
+        String branchName = requestBody.getBranchName();
+        String trxTypeString = requestBody.getTrxType();
+        var trxDetails = requestBody.getTrxDetails();
 
-        var generateTicketRequest = GenerateTicketRequest.builder()
+        var generateTicketDto = GenerateTicketDto.builder()
                 .customerNo(customerNo)
-                .trxTypeString(trxTypeString)
                 .bookingDateString(bookingDateString)
                 .branchName(branchName)
+                .trxTypeString(trxTypeString)
+                .trxDetails(trxDetails)
                 .build();
 
-        return ResponseEntity.ok(ticketService.generateTicket(generateTicketRequest, width, height));
+        return ResponseEntity.ok(ticketService.generateTicket(generateTicketDto, width, height));
     }
 
     @GetMapping

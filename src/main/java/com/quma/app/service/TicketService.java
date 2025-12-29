@@ -1,21 +1,17 @@
 package com.quma.app.service;
 
 import com.google.zxing.WriterException;
-import com.quma.app.common.constant.ErrorCode;
 import com.quma.app.common.constant.TrxType;
 import com.quma.app.common.exception.BadParameterException;
-import com.quma.app.common.request.GenerateTicketRequest;
+import com.quma.app.common.dto.GenerateTicketDto;
 import com.quma.app.common.response.ErrorResponse;
-import com.quma.app.common.response.TicketDetailResponse;
 import com.quma.app.common.response.TicketListResponse;
 import com.quma.app.entity.Ticket;
 import com.quma.app.repository.TicketRepository;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.ObjectMapper;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -39,11 +35,12 @@ public class TicketService {
     @Value("${ticket.storage-path}")
     private String storagePath;
 
-    public ErrorResponse generateTicket(GenerateTicketRequest request, int width, int height) throws IOException, WriterException {
+    public ErrorResponse generateTicket(GenerateTicketDto request, int width, int height) throws IOException, WriterException {
         String customerNo = request.getCustomerNo();
         String trxTypeString = request.getTrxTypeString();
         String bookingDateString = request.getBookingDateString();
         String branchName = request.getBranchName();
+        var trxDetails = request.getTrxDetails();
 
         TrxType trxType;
         try {
@@ -65,6 +62,7 @@ public class TicketService {
         Ticket ticket = Ticket.builder()
                 .customerNo(customerNo)
                 .trxType(trxType)
+                .trxDetails(trxDetails)
                 .bookingDate(bookingDate)
                 .branchName(branchName)
                 .url(ticketUrl)

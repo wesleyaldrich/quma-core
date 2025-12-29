@@ -3,8 +3,11 @@ package com.quma.app;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 @SpringBootApplication
@@ -31,6 +34,15 @@ public class QumaCoreApplication {
 //		System.out.println();
 //		System.out.println("Private Key (PKCS#8):");
 //		System.out.println(privateKey);
+//	}
+
+//	public static void main(String[] args) throws NoSuchAlgorithmException {
+//		KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+//		keyGen.init(256);
+//		SecretKey key = keyGen.generateKey();
+//
+//		String base64Key = Base64.getEncoder().encodeToString(key.getEncoded());
+//		System.out.println(base64Key);
 //	}
 
 }

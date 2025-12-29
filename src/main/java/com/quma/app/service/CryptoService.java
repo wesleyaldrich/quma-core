@@ -4,120 +4,102 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Base64;
 
 @Service
 public class CryptoService {
 
-    private final PublicKey publicKey;
-    private final PrivateKey privateKey;
+    private static final String AES_ALGO = "AES";
+    private static final String AES_TRANSFORMATION = "AES/GCM/NoPadding";
+    private static final int GCM_TAG_LENGTH = 128;
+    private static final int IV_LENGTH = 12;
 
-    /* Constructor to correctly load keys */
+    private final SecretKey secretKey;
+    private final SecureRandom secureRandom = new SecureRandom();
+
     public CryptoService(
-            @Value("${key.encryption}") String encKey,
-            @Value("${key.decryption}") String decKey
+            @Value("${key.aes}") String base64Key
     ) {
-        this.publicKey = loadPublicKey(encKey);
-        this.privateKey = loadPrivateKey(decKey);
+        this.secretKey = loadAesKey(base64Key);
     }
 
-    /* Base64 */
-
-    public String encodeBase64(String text) {
-        return Base64.getEncoder()
-                .encodeToString(text.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public String decodeBase64ToString(String base64) {
-        return new String(
-                Base64.getDecoder().decode(base64),
-                StandardCharsets.UTF_8
-        );
-    }
-
-    /* RSA */
+    /* AES */
 
     public String encrypt(String plainText) {
         try {
-            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+            byte[] iv = new byte[IV_LENGTH];
+            secureRandom.nextBytes(iv);
 
-            byte[] encrypted = cipher.doFinal(
+            Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+            cipher.init(
+                    Cipher.ENCRYPT_MODE,
+                    secretKey,
+                    new GCMParameterSpec(GCM_TAG_LENGTH, iv)
+            );
+
+            byte[] cipherText = cipher.doFinal(
                     plainText.getBytes(StandardCharsets.UTF_8)
             );
 
-            return Base64.getEncoder().encodeToString(encrypted);
+            // IV + ciphertext
+            byte[] combined = new byte[iv.length + cipherText.length];
+            System.arraycopy(iv, 0, combined, 0, iv.length);
+            System.arraycopy(cipherText, 0, combined, iv.length, cipherText.length);
+
+            return Base64.getEncoder().encodeToString(combined);
 
         } catch (Exception e) {
-            throw new IllegalStateException("RSA encryption failed", e);
+            throw new IllegalStateException("AES encryption failed", e);
         }
     }
 
     public String decrypt(String base64CipherText) {
         try {
-            byte[] encryptedBytes = Base64.getDecoder()
-                    .decode(base64CipherText);
+            byte[] combined = Base64.getDecoder().decode(base64CipherText);
 
-            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+            byte[] iv = Arrays.copyOfRange(combined, 0, IV_LENGTH);
+            byte[] cipherText = Arrays.copyOfRange(combined, IV_LENGTH, combined.length);
 
-            byte[] decrypted = cipher.doFinal(encryptedBytes);
+            Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+            cipher.init(
+                    Cipher.DECRYPT_MODE,
+                    secretKey,
+                    new GCMParameterSpec(GCM_TAG_LENGTH, iv)
+            );
 
-            return new String(decrypted, StandardCharsets.UTF_8);
+            byte[] plainText = cipher.doFinal(cipherText);
+            return new String(plainText, StandardCharsets.UTF_8);
 
         } catch (Exception e) {
-            throw new IllegalStateException("RSA decryption failed", e);
+            throw new IllegalStateException("AES decryption failed", e);
         }
     }
 
-    /* Key loaders */
+    /* Key loader */
 
-    private PublicKey loadPublicKey(String keyValue) {
+    private SecretKey loadAesKey(String base64Key) {
         try {
-            byte[] keyBytes = extractKeyBytes(keyValue);
-            X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-            return KeyFactory.getInstance("RSA").generatePublic(spec);
-        } catch (Exception e) {
-            throw new IllegalStateException("Invalid RSA public key", e);
-        }
-    }
+            byte[] keyBytes = Base64.getDecoder().decode(base64Key);
 
-    private PrivateKey loadPrivateKey(String keyValue) {
-        try {
-            byte[] keyBytes = extractKeyBytes(keyValue);
-            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-            return KeyFactory.getInstance("RSA").generatePrivate(spec);
-        } catch (Exception e) {
-            throw new IllegalStateException("Invalid RSA private key", e);
-        }
-    }
-
-    private byte[] extractKeyBytes(String keyValue) {
-        try {
-            byte[] firstDecode = Base64.getDecoder().decode(keyValue);
-
-            String decoded = new String(firstDecode, StandardCharsets.UTF_8);
-
-            if (decoded.contains("BEGIN")) {
-                // PEM detected
-                String clean = decoded
-                        .replaceAll("-----BEGIN (.*)-----", "")
-                        .replaceAll("-----END (.*)-----", "")
-                        .replaceAll("\\s", "");
-
-                return Base64.getDecoder().decode(clean);
+            if (keyBytes.length != 32) {
+                throw new IllegalArgumentException("AES key must be 256 bits (32 bytes)");
             }
 
-            return firstDecode;
+            return new SecretKeySpec(keyBytes, AES_ALGO);
 
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to extract key.", e);
+            throw new IllegalStateException("Invalid AES key", e);
         }
     }
 }

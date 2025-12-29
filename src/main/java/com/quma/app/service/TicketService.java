@@ -70,21 +70,19 @@ public class TicketService {
                 .url(ticketUrl)
                 .build();
 
-        ObjectMapper mapper = new ObjectMapper();
-        String ticketJson = mapper.writeValueAsString(ticket);
-        log.info("ticketJson: {}", ticketJson);
+        ticketRepository.save(ticket);
 
-        String ticketJsonEncrypted = cryptoService.encrypt(ticketJson);
-        log.info("ticketJsonEncrypted: {}", ticketJsonEncrypted);
+        String ticketId = ticket.getId();
+        String ticketIdEncrypted = cryptoService.encrypt(ticketId);
+        String ticketIdDecrypted = cryptoService.decrypt(ticketIdEncrypted);
 
-        /* This part can be safely deleted, since it's purely for confirmation purposes */
-        String ticketJsonDecrypted = cryptoService.decrypt(ticketJsonEncrypted);
-        log.info("ticketJsonDecrypted: {}", ticketJsonDecrypted);
+        log.info("ticketJson: {}", ticketId);
+        log.info("ticketIdEncrypted: {}", ticketIdEncrypted);
+        log.info("ticketIdDecrypted: {}", ticketIdDecrypted);
 
         /* Generate QR then save ticket */
-        BufferedImage image = qrCodeService.generate(ticketJsonEncrypted, width, height);
+        BufferedImage image = qrCodeService.generate(ticketIdEncrypted, width, height);
         save(image, fileName);
-        ticketRepository.save(ticket);
 
         return ErrorResponse.builder().errorMessage("Successfully created new ticket!").build();
     }

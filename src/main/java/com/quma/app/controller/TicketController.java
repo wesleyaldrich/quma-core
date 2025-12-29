@@ -25,7 +25,7 @@ public class TicketController {
 
     private final TicketService ticketService;
 
-    @Value("${ticket.storage-path}")
+    @Value("${storage-path.ticket}")
     private String storagePath;
 
     @GetMapping(value = "/images/{fileName}", produces = MediaType.IMAGE_PNG_VALUE)

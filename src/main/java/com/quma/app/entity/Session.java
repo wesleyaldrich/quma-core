@@ -24,8 +24,6 @@ public class Session {
 
     /* Should only be filled when SessionStatus.IDENTIFIED */
     private String ticketId;
-
-    /* Should only be filled when SessionStatus.VERIFIED */
     private String customerNo;
 
     /* To handle poll logic */

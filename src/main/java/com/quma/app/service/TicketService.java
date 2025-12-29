@@ -32,7 +32,7 @@ public class TicketService {
     private final CryptoService cryptoService;
     private final TicketRepository ticketRepository;
 
-    @Value("${ticket.storage-path}")
+    @Value("${storage-path.ticket}")
     private String storagePath;
 
     public ErrorResponse generateTicket(GenerateTicketDto request, int width, int height) throws IOException, WriterException {

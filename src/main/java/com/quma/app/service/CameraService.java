@@ -44,8 +44,8 @@ public class CameraService {
             }
 
             /* Validate session status */
-            var sessionStatus = sessionOptional.get().getStatus();
-            switch (sessionStatus) {
+            var session = sessionOptional.get();
+            switch (session.getStatus()) {
                 case INITIATED:
                     throw new BadParameterException("Detected attempt to FR before ticket is identified!");
                 case IDENTIFIED:
@@ -54,6 +54,9 @@ public class CameraService {
                 case VERIFIED:
                     throw new BadParameterException("Customer is already verified!");
             }
+
+            /* Reset session status */
+            session.setResponded(false);
 
 //            try {
 //                /* TODO: Write to camera FR topic here. */

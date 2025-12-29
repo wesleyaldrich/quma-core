@@ -25,6 +25,17 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(BadParameterException.class)
+    public ResponseEntity<ErrorResponse> handleBadDeveloperException(BadDeveloperException e) {
+        var response = ErrorResponse.builder()
+                .errorCode(ErrorCode.BAD_CODE.getCode())
+                .errorMessage(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception e) {
 

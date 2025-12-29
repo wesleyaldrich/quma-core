@@ -18,7 +18,7 @@ import java.util.UUID;
 @Service
 public class QrCodeService {
 
-    @Value("${ticket.storage-path}")
+    @Value("${storage-path.ticket}")
     private String storagePath;
 
     public BufferedImage generate(String text, int width, int height) throws WriterException, IOException {

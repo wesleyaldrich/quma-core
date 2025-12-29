@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
-    @ExceptionHandler(BadParameterException.class)
+    @ExceptionHandler(BadDeveloperException.class)
     public ResponseEntity<ErrorResponse> handleBadDeveloperException(BadDeveloperException e) {
         var response = ErrorResponse.builder()
                 .errorCode(ErrorCode.BAD_CODE.getCode())

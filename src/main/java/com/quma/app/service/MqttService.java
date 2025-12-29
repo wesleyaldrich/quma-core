@@ -23,7 +23,7 @@ public class MqttService {
     private final CryptoService cryptoService;
 
     @Value("${fr.minimum-confidence-level}")
-    private Integer minimumConfidence;
+    private Double minimumConfidence;
 
     @Value("${ticket.ttl}")
     private Integer ticketLifetime;

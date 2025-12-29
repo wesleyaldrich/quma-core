@@ -31,8 +31,7 @@ public class Session {
     /* To handle poll logic */
     @Builder.Default
     private boolean responded = false;
-    private boolean validQr;
-    private boolean validFr;
+    private boolean valid;
 
     /* Timestamps */
     @CreatedDate

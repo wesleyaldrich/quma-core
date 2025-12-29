@@ -11,6 +11,5 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class PollCameraResponse extends QumaResponse {
     private boolean responded;
-    private boolean validQr;
-    private boolean validFr;
+    private boolean valid;
 }

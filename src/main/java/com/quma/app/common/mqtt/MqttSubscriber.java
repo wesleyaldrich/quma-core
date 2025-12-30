@@ -30,16 +30,19 @@ public class MqttSubscriber {
 
         String payload = message.getPayload();
 
-        if (topicFrOut.equals(topic)) {
+        if (topicQrOut.equals(topic)) {
             handleQr(payload);
         }
-        else if (topicQrOut.equals(topic)) {
+        else if (topicFrOut.equals(topic)) {
             handleFr(payload);
         }
     }
 
     private void handleQr(String payload) {
         String[] parts = payload.split("#");
+
+        System.out.println(parts);
+        System.out.println(parts.length);
 
         if (parts.length != 2) {
             throw new IllegalArgumentException("Invalid FR payload: " + payload);

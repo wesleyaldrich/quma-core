@@ -1,4 +1,4 @@
 package com.quma.app.common.mqtt;
 
-public class MqttConsumer {
+public class MqttSubscriber {
 }

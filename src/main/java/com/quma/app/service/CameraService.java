@@ -132,6 +132,10 @@ public class CameraService {
         }
 
         var ticketId = sessionOptional.get().getTicketId();
+        if (ticketId == null) {
+            throw new BadParameterException("Couldn't find the ticket attached to the session.");
+        }
+
         var ticketOptional = ticketRepository.findById(ticketId);
         if (ticketOptional.isEmpty()) {
             throw new BadParameterException("Couldn't find the ticket attached to the session.");

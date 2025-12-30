@@ -72,17 +72,17 @@ public class MqttService {
 
         if (!ticket.isValid()) {
             valid = false;
-            reason = "Ticket was cancelled by the customer.";
+            reason = "Tiket ini telah dibatalkan sebelumnya.";
             log.info(reason);
         }
         else if (now.isBefore(ticket.getBookingDate())) {
             valid = false;
-            reason = "Scanning before the promised booking date.";
+            reason = "Tiket belum dapat digunakan sebelum waktu yang dijadwalkan.";
             log.info(reason);
         }
         else if (now.isAfter(ticket.getBookingDate().plusMinutes(ticketLifetime))) {
             valid = false;
-            reason = "Expired ticket.";
+            reason = "Tiket sudah melewati masa berlaku.";
             log.info(reason);
         }
 
@@ -121,7 +121,7 @@ public class MqttService {
 
         /* Determine validity */
         boolean valid = (confidenceRate >= minimumConfidence);
-        String reason = (valid)? null: "Face doesn't match!";
+        String reason = (valid)? null: "Wajah tidak cocok.";
 
         /* Update the session */
         session.setStatus(SessionStatus.VERIFIED);

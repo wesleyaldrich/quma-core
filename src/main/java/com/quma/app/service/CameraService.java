@@ -60,6 +60,7 @@ public class CameraService {
 
             /* Reset session status */
             session.setResponded(false);
+            session.setReason(null);
             sessionRepository.save(session);
 
 //            try {

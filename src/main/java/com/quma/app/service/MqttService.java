@@ -60,20 +60,24 @@ public class MqttService {
 
         /* Determine validity */
         boolean valid = true;
+        String reason = "Perfectly fine.";
         LocalDateTime now = LocalDateTime.now();
         Ticket ticket = ticketOptional.get();
 
         if (!ticket.isValid()) {
-            log.info("Ticket was cancelled by the customer.");
             valid = false;
+            reason = "Ticket was cancelled by the customer.";
+            log.info(reason);
         }
         else if (now.isBefore(ticket.getBookingDate())) {
-            log.info("Ticket is scanned before the promised bookingDate.");
             valid = false;
+            reason = "Scanning before the promised booking date.";
+            log.info(reason);
         }
         else if (now.isAfter(ticket.getBookingDate().plusMinutes(ticketLifetime))) {
-            log.info("Ticket is expired.");
             valid = false;
+            reason = "Expired ticket.";
+            log.info(reason);
         }
 
         /* Update the session */
@@ -81,6 +85,7 @@ public class MqttService {
         session.setTicketId(ticket.getId());
         session.setCustomerNo(ticket.getCustomerNo());
         session.setValid(valid);
+        session.setReason(reason);
         session.setResponded(true);
 
         sessionRepository.save(session);
@@ -110,10 +115,12 @@ public class MqttService {
 
         /* Determine validity */
         boolean valid = (confidenceRate >= minimumConfidence);
+        String reason = (valid)? "Perfectly fine.": "Face doesn't match!";
 
         /* Update the session */
         session.setStatus(SessionStatus.VERIFIED);
         session.setValid(valid);
+        session.setReason(reason);
         session.setResponded(true);
 
         sessionRepository.save(session);

@@ -103,6 +103,7 @@ public class CameraService {
         return PollCameraResponse.builder()
                 .responded(session.isResponded())
                 .valid(session.isValid())
+                .reason(session.getReason())
                 .build();
     }
 

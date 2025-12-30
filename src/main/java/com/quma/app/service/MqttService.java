@@ -51,7 +51,13 @@ public class MqttService {
         }
 
         /* Decrypt and find the ticket */
-        String ticketIdDecrypted = cryptoService.decrypt(ticketId);
+        String ticketIdDecrypted = null;
+        try {
+            ticketIdDecrypted = cryptoService.decrypt(ticketId);
+        } catch (IllegalStateException e) {
+            log.error("Attempt on scanning invalid QR code on sessionEpoch={}.", sessionEpoch);
+            return;
+        }
         Optional<Ticket> ticketOptional = ticketRepository.findById(ticketIdDecrypted);
         if (ticketOptional.isEmpty()) {
             log.error("Couldn't find any ticket with ticketIdDecrypted={} when processing QR.", ticketIdDecrypted);
@@ -60,7 +66,7 @@ public class MqttService {
 
         /* Determine validity */
         boolean valid = true;
-        String reason = "Perfectly fine.";
+        String reason = null;
         LocalDateTime now = LocalDateTime.now();
         Ticket ticket = ticketOptional.get();
 
@@ -115,7 +121,7 @@ public class MqttService {
 
         /* Determine validity */
         boolean valid = (confidenceRate >= minimumConfidence);
-        String reason = (valid)? "Perfectly fine.": "Face doesn't match!";
+        String reason = (valid)? null: "Face doesn't match!";
 
         /* Update the session */
         session.setStatus(SessionStatus.VERIFIED);

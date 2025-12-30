@@ -30,8 +30,7 @@ public class Session {
     @Builder.Default
     private boolean responded = false;
     private boolean valid;
-    @Builder.Default
-    private String reason = "Perfectly fine.";
+    private String reason;
 
     /* Timestamps */
     @CreatedDate

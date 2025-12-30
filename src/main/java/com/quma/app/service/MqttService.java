@@ -51,7 +51,13 @@ public class MqttService {
         }
 
         /* Decrypt and find the ticket */
-        String ticketIdDecrypted = cryptoService.decrypt(ticketId);
+        String ticketIdDecrypted = null;
+        try {
+            ticketIdDecrypted = cryptoService.decrypt(ticketId);
+        } catch (IllegalStateException e) {
+            log.error("Attempt on scanning invalid QR code on sessionEpoch={}.", sessionEpoch);
+            return;
+        }
         Optional<Ticket> ticketOptional = ticketRepository.findById(ticketIdDecrypted);
         if (ticketOptional.isEmpty()) {
             log.error("Couldn't find any ticket with ticketIdDecrypted={} when processing QR.", ticketIdDecrypted);
@@ -60,20 +66,24 @@ public class MqttService {
 
         /* Determine validity */
         boolean valid = true;
+        String reason = null;
         LocalDateTime now = LocalDateTime.now();
         Ticket ticket = ticketOptional.get();
 
         if (!ticket.isValid()) {
-            log.info("Ticket was cancelled by the customer.");
             valid = false;
+            reason = "Tiket ini telah dibatalkan sebelumnya.";
+            log.info(reason);
         }
         else if (now.isBefore(ticket.getBookingDate())) {
-            log.info("Ticket is scanned before the promised bookingDate.");
             valid = false;
+            reason = "Tiket belum dapat digunakan sebelum waktu yang dijadwalkan.";
+            log.info(reason);
         }
         else if (now.isAfter(ticket.getBookingDate().plusMinutes(ticketLifetime))) {
-            log.info("Ticket is expired.");
             valid = false;
+            reason = "Tiket sudah melewati masa berlaku.";
+            log.info(reason);
         }
 
         /* Update the session */
@@ -81,6 +91,7 @@ public class MqttService {
         session.setTicketId(ticket.getId());
         session.setCustomerNo(ticket.getCustomerNo());
         session.setValid(valid);
+        session.setReason(reason);
         session.setResponded(true);
 
         sessionRepository.save(session);
@@ -110,10 +121,12 @@ public class MqttService {
 
         /* Determine validity */
         boolean valid = (confidenceRate >= minimumConfidence);
+        String reason = (valid)? null: "Wajah tidak cocok.";
 
         /* Update the session */
         session.setStatus(SessionStatus.VERIFIED);
         session.setValid(valid);
+        session.setReason(reason);
         session.setResponded(true);
 
         sessionRepository.save(session);

@@ -3,10 +3,11 @@ package com.quma.app.service;
 import com.quma.app.common.constant.SessionStatus;
 import com.quma.app.common.exception.BadParameterException;
 import com.quma.app.common.response.ErrorResponse;
+import com.quma.app.common.response.FinalResultResponse;
 import com.quma.app.common.response.PollCameraResponse;
 import com.quma.app.entity.Session;
 import com.quma.app.repository.SessionRepository;
-
+import com.quma.app.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +21,7 @@ import com.quma.app.common.mqtt.MqttPublisher;
 public class CameraService {
 
     private final SessionRepository sessionRepository;
+    private final TicketRepository ticketRepository;
 
     private final MqttPublisher mqttPublisher;
 
@@ -57,6 +59,7 @@ public class CameraService {
 
             /* Reset session status */
             session.setResponded(false);
+            session.setReason(null);
             sessionRepository.save(session);
 
             String payload = String.format("fr#%s#%s", sessionId, session.getCustomerNo());
@@ -94,6 +97,7 @@ public class CameraService {
         return PollCameraResponse.builder()
                 .responded(session.isResponded())
                 .valid(session.isValid())
+                .reason(session.getReason())
                 .build();
     }
 
@@ -109,6 +113,35 @@ public class CameraService {
                 .build();
 
         sessionRepository.save(newSession);
+    }
+
+    public FinalResultResponse getFinalResult(String sessionId) {
+        /* Validations */
+        if (sessionId == null || sessionId.isEmpty()) {
+            throw new BadParameterException("Session id not found in header.");
+        }
+
+        /* Find the existing session */
+        var sessionOptional = sessionRepository.findBySessionEpoch(sessionId);
+        if (sessionOptional.isEmpty()) {
+            throw new BadParameterException("Session with the provided epoch doesn't exist in Core.");
+        }
+
+        var ticketId = sessionOptional.get().getTicketId();
+        if (ticketId == null) {
+            throw new BadParameterException("Couldn't find the ticket attached to the session.");
+        }
+
+        var ticketOptional = ticketRepository.findById(ticketId);
+        if (ticketOptional.isEmpty()) {
+            throw new BadParameterException("Couldn't find the ticket attached to the session.");
+        }
+
+        var ticket = ticketOptional.get();
+
+        return FinalResultResponse.builder()
+                .ticket(ticket)
+                .build();
     }
 
 }

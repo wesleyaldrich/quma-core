@@ -12,4 +12,6 @@ import lombok.experimental.SuperBuilder;
 public class PollCameraResponse extends QumaResponse {
     private boolean responded;
     private boolean valid;
+    @Builder.Default
+    private String reason = "";
 }

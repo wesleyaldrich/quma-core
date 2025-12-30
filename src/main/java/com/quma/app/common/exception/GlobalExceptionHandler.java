@@ -36,6 +36,17 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(BadCustomerException.class)
+    public ResponseEntity<ErrorResponse> handleBadCustomerException(BadCustomerException e) {
+        var response = ErrorResponse.builder()
+                .errorCode(ErrorCode.BAD_CUSTOMER.getCode())
+                .errorMessage(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception e) {
 

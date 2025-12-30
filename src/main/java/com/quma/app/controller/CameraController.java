@@ -1,6 +1,7 @@
 package com.quma.app.controller;
 
 import com.quma.app.common.response.ErrorResponse;
+import com.quma.app.common.response.FinalResultResponse;
 import com.quma.app.common.response.PollCameraResponse;
 import com.quma.app.service.CameraService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +28,13 @@ public class CameraController {
         String sessionId = request.getHeader("x-session-id");
 
         return ResponseEntity.ok(cameraService.pollCameraResult(mode, sessionId));
+    }
+
+    @GetMapping("/final")
+    public ResponseEntity<FinalResultResponse> getFinalResult(HttpServletRequest request) {
+        String sessionId = request.getHeader("x-session-id");
+
+        return ResponseEntity.ok(cameraService.getFinalResult(sessionId));
     }
 
 }

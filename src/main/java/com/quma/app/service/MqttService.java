@@ -87,7 +87,7 @@ public class MqttService {
         }
 
         /* Update the session */
-        session.setStatus(SessionStatus.IDENTIFIED);
+        if (valid) session.setStatus(SessionStatus.IDENTIFIED);
         session.setTicketId(ticket.getId());
         session.setCustomerNo(ticket.getCustomerNo());
         session.setValid(valid);
@@ -124,7 +124,7 @@ public class MqttService {
         String reason = (valid)? null: "Wajah tidak cocok.";
 
         /* Update the session */
-        session.setStatus(SessionStatus.VERIFIED);
+        if (valid) session.setStatus(SessionStatus.VERIFIED);
         session.setValid(valid);
         session.setReason(reason);
         session.setResponded(true);

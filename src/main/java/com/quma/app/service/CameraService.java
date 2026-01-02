@@ -59,11 +59,19 @@ public class CameraService {
 
             /* Reset session status */
             session.setResponded(false);
+            session.setValid(false);
             session.setReason(null);
             sessionRepository.save(session);
 
             String payload = String.format("fr#%s#%s", sessionId, session.getCustomerNo());
             mqttPublisher.publish(payload);
+        }
+        else if ("OFF".equalsIgnoreCase(mode)) {
+            String payload = "idle";
+            mqttPublisher.publish(payload);
+            return ErrorResponse.builder()
+                    .errorMessage("Successfully deactivated camera to " + mode.toUpperCase() + " mode!")
+                    .build();
         }
 
         return ErrorResponse.builder()

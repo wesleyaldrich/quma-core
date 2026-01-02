@@ -66,6 +66,19 @@
 		</dependency>
 		<!-- END: QR Code Generator -->
 
+		<!-- START: QR Code Generator -->
+		<dependency>
+			<groupId>org.springframework.integration</groupId>
+			<artifactId>spring-integration-mqtt</artifactId>
+			<version>7.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.paho</groupId>
+			<artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+			<version>1.2.5</version>
+		</dependency>
+		<!-- END: QR Code Generator -->
+
 	</dependencies>
 
 	<build>

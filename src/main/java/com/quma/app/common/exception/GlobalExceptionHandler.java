@@ -58,4 +58,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(response);
     }
+
+    @ExceptionHandler(BadMqttException.class)
+    public ResponseEntity<ErrorResponse> handleBadMqttException(BadMqttException e) {
+
+        var response = ErrorResponse.builder()
+                .errorCode(ErrorCode.MQTT_FAULT.getCode())
+                .errorMessage(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(response);
+    }
 }

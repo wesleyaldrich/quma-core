@@ -10,7 +10,10 @@ import com.quma.app.repository.SessionRepository;
 import com.quma.app.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
+
+import com.quma.app.common.mqtt.MqttPublisher;
 
 @Slf4j
 @Service
@@ -19,6 +22,8 @@ public class CameraService {
 
     private final SessionRepository sessionRepository;
     private final TicketRepository ticketRepository;
+
+    private final MqttPublisher mqttPublisher;
 
     public ErrorResponse activateCamera(String mode, String sessionId) {
         /* Validations */
@@ -29,14 +34,8 @@ public class CameraService {
 
         if ("QR".equalsIgnoreCase(mode)) {
             generateSession(sessionId);
-
-//            try {
-//                /* TODO: Write to camera QR topic here. */
-//
-//            } catch (Exception e) {
-//                /* TODO: Throw the exception that may occur. */
-//
-//            }
+            String payload = String.format("qr#%s", sessionId);
+            mqttPublisher.publish(payload);
         }
         else if ("FR".equalsIgnoreCase(mode)) {
             /* Find the existing session */
@@ -63,13 +62,8 @@ public class CameraService {
             session.setReason(null);
             sessionRepository.save(session);
 
-//            try {
-//                /* TODO: Write to camera FR topic here. */
-//
-//            } catch (Exception e) {
-//                /* TODO: Throw the exception that may occur. */
-//
-//            }
+            String payload = String.format("fr#%s#%s", sessionId, session.getCustomerNo());
+            mqttPublisher.publish(payload);
         }
 
         return ErrorResponse.builder()

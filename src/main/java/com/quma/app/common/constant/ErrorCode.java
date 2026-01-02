@@ -12,7 +12,6 @@ public enum ErrorCode {
     BAD_REQUEST("QMA-2"),
     BAD_CODE("QMA-3"),
     MQTT_FAULT("QMA-4"),
-    BAD_CUSTOMER("QMA-4"),
     UNEXPECTED_ERROR("QMA-0");
 
     private final String code;

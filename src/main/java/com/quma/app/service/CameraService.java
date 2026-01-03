@@ -1,19 +1,19 @@
 package com.quma.app.service;
 
+import org.springframework.stereotype.Service;
+
 import com.quma.app.common.constant.SessionStatus;
 import com.quma.app.common.exception.BadParameterException;
+import com.quma.app.common.mqtt.MqttPublisher;
 import com.quma.app.common.response.ErrorResponse;
 import com.quma.app.common.response.FinalResultResponse;
 import com.quma.app.common.response.PollCameraResponse;
 import com.quma.app.entity.Session;
 import com.quma.app.repository.SessionRepository;
 import com.quma.app.repository.TicketRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.stereotype.Service;
-
-import com.quma.app.common.mqtt.MqttPublisher;
 
 @Slf4j
 @Service
@@ -110,7 +110,7 @@ public class CameraService {
     }
 
     private void validateMode(String mode) {
-        if (!("QR".equalsIgnoreCase(mode) || "FR".equalsIgnoreCase(mode))) {
+        if (!("QR".equalsIgnoreCase(mode) || "FR".equalsIgnoreCase(mode) || "OFF".equalsIgnoreCase(mode))) {
             throw new BadParameterException("Unrecognized mode passed to Core.");
         }
     }
